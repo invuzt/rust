@@ -20,13 +20,34 @@ jobs:
     - name: Rust Toolchain
       uses: dtolnay/rust-toolchain@stable
 
+    - name: Cache Cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ./cargo-target-cache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Move Cache To SHM
+      run: |
+        if [ -d "./cargo-target-cache" ]; then
+          mkdir -p /dev/shm/cargo-target
+          cp -r ./cargo-target-cache/* /dev/shm/cargo-target/
+        fi
+
     - name: Build Binary
       run: cargo build --release
 
-    - name: Copy Binary From SHM
+    - name: Copy Binary And Save Cache
       run: |
         mkdir -p ./output
         cp /dev/shm/cargo-target/release/rust_test_shm ./output/
+        mkdir -p ./cargo-target-cache
+        cp -r /dev/shm/cargo-target/* ./cargo-target-cache/
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
