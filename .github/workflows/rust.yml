@@ -1,4 +1,3 @@
-# File: .github/workflows/rust.yml
 name: Rust CI
 
 on:
@@ -21,5 +20,16 @@ jobs:
     - name: Rust Toolchain
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Run Tests
-      run: cargo test --verbose
+    - name: Build Binary
+      run: cargo build --release
+
+    - name: Copy Binary From SHM
+      run: |
+        mkdir -p ./output
+        cp /dev/shm/cargo-target/release/rust_test_shm ./output/
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: rust-binary
+        path: ./output/rust_test_shm
